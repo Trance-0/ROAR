@@ -131,6 +131,8 @@ dmypy.json
 .idea
 __pycache__
 LinuxNoEditor
+WindowsNoEditor
 
 data
 output
+archive
