@@ -12,7 +12,6 @@ from typing import Tuple
 import json
 from pathlib import Path
 
-
 class PIDController(Controller):
     def __init__(self, agent, steering_boundary: Tuple[float, float],
                  throttle_boundary: Tuple[float, float], **kwargs):
@@ -31,12 +30,13 @@ class PIDController(Controller):
         )
         self.logger = logging.getLogger(__name__)
 
+
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
                                                           target_speed=kwargs.get("target_speed", self.max_speed))
         steering = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
-        if steering>0.1:
-            throttle=0
+        # if abs(steering)>0.2:
+        #     throttle=0.8
         return VehicleControl(throttle=throttle, steering=steering)
 
     @staticmethod

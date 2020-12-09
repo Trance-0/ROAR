@@ -55,6 +55,7 @@
   "enable_autopilot": true,
   "spawn_point_id": 1,
   "show_sensors_data": false,
+  "synchronous_mode":true,
   "save_sensor_data": false
 }
 
