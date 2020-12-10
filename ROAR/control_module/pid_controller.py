@@ -34,9 +34,11 @@ class PIDController(Controller):
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
                                                           target_speed=kwargs.get("target_speed", self.max_speed))
-        steering = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
-        # if abs(steering)>0.2:
-        #     throttle=0.8
+        steering,x,y= self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+        if abs(steering)>0.1:
+            throttle=1
+        if abs(steering)>0.07:
+            throttle=throttle*(1-steering*1.9)
         return VehicleControl(throttle=throttle, steering=steering)
 
     @staticmethod
@@ -103,15 +105,12 @@ class LatPIDController(Controller):
             y=v_begin.y,
             z=math.sin(math.radians(self.agent.vehicle.transform.rotation.pitch)),
         )
+        x=v_begin.x
+        y=v_begin.y
         v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, v_end.z - v_begin.z])
-
         # calculate error projection
         w_vec = np.array(
-            [
-                next_waypoint.location.x - v_begin.x,
-                next_waypoint.location.y - v_begin.y,
-                next_waypoint.location.z - v_begin.z,
-            ]
+            [next_waypoint.location.x - v_begin.x,next_waypoint.location.y - v_begin.y,next_waypoint.location.z - v_begin.z, ]
         )
         _dot = math.acos(
             np.clip(
@@ -130,10 +129,8 @@ class LatPIDController(Controller):
         else:
             _de = 0.0
             _ie = 0.0
-
         k_p, k_d, k_i = PIDController.find_k_values(config=self.config, vehicle=self.agent.vehicle)
-
         lat_control = float(
             np.clip((k_p * _dot) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
         )
-        return lat_control
+        return lat_control,x,y
