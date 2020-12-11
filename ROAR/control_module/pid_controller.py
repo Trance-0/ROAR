@@ -35,25 +35,30 @@ class PIDController(Controller):
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
                                                           target_speed=kwargs.get("target_speed", self.max_speed))
         steering,x,y,z= self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
-        if y>0.8 or (y>0.2 and x<0):
+        if y>0.8 or (x>-390 and x<0 and z<91):
             if steering>0:
                 steering=0.01
             else:
                 steering=-0.01
-    # module 1:
+    # module 1 38s:
         # if steering<0.4 and steering>0 and y<0.8 and x>0:
         #     throttle=throttle*(1-steering*1.6)
         # if steering>-0.4 and steering<-0.05 and y<0.8 and x<0:
         #     steering=steering*1.4
-    # module 2:
-        # if steering<0.4 and steering>0.05 and y<0.8 and x>0:
+    # module 2 (unstable) 36s:
+        # if steering>-0.4 and steering<-0.05 and y<0.8 and x<0:
         #     steering=steering*1.3
-        # if steering<0.4 and steering>0.05 and y<0.8 and x>0:
-        #     steering=steering*2
+        # if x> 370 and x<390 and z>-60 and z<20:
+        #     steering = steering *10
+    # module 3:
         if steering>-0.4 and steering<-0.05 and y<0.8 and x<0:
             steering=steering*1.3
-        if x> 370 and x<390 and z>-60 and z<20:
-            steering = steering *10
+        if x> 360 and x<390 and z>-60 and z<20:
+            throttle=0.9
+            steering = 0.9
+        if x> -570 and x<-420 and z<80 and z>10:
+            # throttle=0.9
+            steering = -0.4
 
         # throttle=throttle*(1-steering*1.5)
      
