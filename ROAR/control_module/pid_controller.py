@@ -34,11 +34,31 @@ class PIDController(Controller):
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
                                                           target_speed=kwargs.get("target_speed", self.max_speed))
-        steering,x,y= self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
-        if abs(steering)>0.1:
-            throttle=1
-        if abs(steering)>0.07:
-            throttle=throttle*(1-steering*1.9)
+        steering,x,y,z= self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+        if y>0.8 or (y>0.2 and x<0):
+            if steering>0:
+                steering=0.01
+            else:
+                steering=-0.01
+    # module 1:
+        # if steering<0.4 and steering>0 and y<0.8 and x>0:
+        #     throttle=throttle*(1-steering*1.6)
+        # if steering>-0.4 and steering<-0.05 and y<0.8 and x<0:
+        #     steering=steering*1.4
+    # module 2:
+        # if steering<0.4 and steering>0.05 and y<0.8 and x>0:
+        #     steering=steering*1.3
+        # if steering<0.4 and steering>0.05 and y<0.8 and x>0:
+        #     steering=steering*2
+        if steering>-0.4 and steering<-0.05 and y<0.8 and x<0:
+            steering=steering*1.3
+        if x> 370 and x<390 and z>-60 and z<20:
+            steering = steering *10
+
+        # throttle=throttle*(1-steering*1.5)
+     
+        # if abs(steering)>0.01:
+        #     throttle=0.9
         return VehicleControl(throttle=throttle, steering=steering)
 
     @staticmethod
@@ -107,6 +127,7 @@ class LatPIDController(Controller):
         )
         x=v_begin.x
         y=v_begin.y
+        z=v_begin.z
         v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, v_end.z - v_begin.z])
         # calculate error projection
         w_vec = np.array(
@@ -133,4 +154,4 @@ class LatPIDController(Controller):
         lat_control = float(
             np.clip((k_p * _dot) + (k_d * _de) + (k_i * _ie), self.steering_boundary[0], self.steering_boundary[1])
         )
-        return lat_control,x,y
+        return lat_control,x,y,z
